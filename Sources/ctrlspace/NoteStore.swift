@@ -52,6 +52,18 @@ final class NoteStore: ObservableObject {
         save()
     }
 
+    func updateTitle(_ title: String, for id: UUID) {
+        guard let index = notes.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        notes[index].title = cleanTitle.isEmpty ? "Untitled" : cleanTitle
+        notes[index].updatedAt = Date()
+        notes.sort { $0.updatedAt > $1.updatedAt }
+        save()
+    }
+
     func deleteNote(withID id: UUID) {
         notes.removeAll { $0.id == id }
         save()

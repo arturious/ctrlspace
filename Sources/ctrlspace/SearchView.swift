@@ -11,6 +11,7 @@ struct SearchView: View {
     @State private var isCreating = false
     @State private var isExpanded = false
     @State private var selectedNoteID: UUID?
+    @State private var editingTitleNoteID: UUID?
     @State private var deleteKeyMonitor: Any?
     @FocusState private var isFocused: Bool
 
@@ -90,7 +91,7 @@ struct SearchView: View {
             TextField(
                 "",
                 text: $query,
-                prompt: Text(isCreating ? "Create a note" : "Search for notes")
+                prompt: Text(searchPrompt)
                     .foregroundStyle(.white.opacity(0.38))
             )
             .textFieldStyle(.plain)
@@ -109,7 +110,18 @@ struct SearchView: View {
 
     @ViewBuilder
     private var trailingActions: some View {
-        if query.isEmpty && !isCreating {
+        if editingTitleNoteID != nil {
+            HStack(spacing: 8) {
+                Text("Save")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.34))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                ReturnKeyCap()
+            }
+            .transition(.opacity)
+        } else if query.isEmpty && !isCreating {
             HStack(spacing: 8) {
                 Text("Create note")
                     .font(.system(size: 13, weight: .medium))
@@ -164,6 +176,10 @@ struct SearchView: View {
     }
 
     private var visibleNotes: [Note] {
+        if editingTitleNoteID != nil {
+            return noteStore.notes
+        }
+
         let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanQuery.isEmpty else {
             return noteStore.notes
@@ -171,6 +187,13 @@ struct SearchView: View {
         return noteStore.notes.filter {
             $0.title.localizedCaseInsensitiveContains(cleanQuery)
         }
+    }
+
+    private var searchPrompt: String {
+        if editingTitleNoteID != nil {
+            return "Edit note title"
+        }
+        return isCreating ? "Create a note" : "Search for notes"
     }
 
     private var currentPanelHeight: CGFloat {
@@ -191,6 +214,15 @@ struct SearchView: View {
 
     private func installDeleteKeyMonitor() {
         deleteKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if
+                event.keyCode == UInt16(kVK_ANSI_L),
+                event.modifierFlags.contains(.control),
+                !isCreating
+            {
+                startEditingSelectedTitle()
+                return nil
+            }
+
             guard
                 event.keyCode == UInt16(kVK_Delete),
                 event.modifierFlags.contains(.command),
@@ -215,7 +247,7 @@ struct SearchView: View {
     }
 
     private func updateResultsForQuery() {
-        guard !isCreating else {
+        guard !isCreating, editingTitleNoteID == nil else {
             return
         }
 
@@ -235,6 +267,11 @@ struct SearchView: View {
     }
 
     private func handleEscape() -> KeyPress.Result {
+        if editingTitleNoteID != nil {
+            cancelTitleEditing()
+            return .handled
+        }
+
         if isCreating {
             withAnimation(.easeOut(duration: 0.16)) {
                 isCreating = false
@@ -253,7 +290,13 @@ struct SearchView: View {
     }
 
     private func submit() {
-        if isCreating {
+        if let editingTitleNoteID {
+            noteStore.updateTitle(query, for: editingTitleNoteID)
+            self.editingTitleNoteID = nil
+            selectedNoteID = editingTitleNoteID
+            query = ""
+            setPanelHeight(currentPanelHeight)
+        } else if isCreating {
             let noteID = noteStore.createNote(title: query)
             query = ""
             isCreating = false
@@ -279,6 +322,7 @@ struct SearchView: View {
 
     private func resetSearchPanel() {
         selectedNoteID = nil
+        editingTitleNoteID = nil
         isExpanded = false
         query = ""
         setPanelHeight(Layout.panelHeight)
@@ -325,12 +369,42 @@ struct SearchView: View {
     private func openSelectedNote(_ noteID: UUID) {
         collapseResults()
         query = ""
+        editingTitleNoteID = nil
         openNote(noteID)
     }
 
     private func deleteSelectedNote(_ noteID: UUID) {
         noteStore.deleteNote(withID: noteID)
+        if editingTitleNoteID == noteID {
+            editingTitleNoteID = nil
+            query = ""
+        }
         selectedNoteID = visibleNotes.first?.id
+        setPanelHeight(currentPanelHeight)
+    }
+
+    private func startEditingSelectedTitle() {
+        if !isExpanded {
+            expandResults()
+        }
+
+        guard let noteID = selectedNoteID ?? visibleNotes.first?.id else {
+            return
+        }
+        guard let note = noteStore.note(withID: noteID) else {
+            return
+        }
+
+        selectedNoteID = noteID
+        editingTitleNoteID = noteID
+        query = note.title
+        isFocused = true
+        setPanelHeight(currentPanelHeight)
+    }
+
+    private func cancelTitleEditing() {
+        editingTitleNoteID = nil
+        query = ""
         setPanelHeight(currentPanelHeight)
     }
 }

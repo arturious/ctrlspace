@@ -108,7 +108,22 @@ struct NotesListView: View {
                         .fixedSize(horizontal: true, vertical: false)
 
                     CommandKeyCap()
-                    DeleteKeyCap()
+
+                    HStack(spacing: 4) {
+                        Text("+")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.36))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+
+                        DeleteKeyCap()
+
+                        Text(",")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.36))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
                 }
             }
             .buttonStyle(.plain)
@@ -130,22 +145,49 @@ struct NotesListView: View {
 
 struct NavigationHintRow: View {
     var body: some View {
-        HStack(spacing: Layout.controlSpacing) {
+        HStack(spacing: 14) {
             HStack(spacing: 8) {
-                ArrowKeyCap(direction: .up)
-                ArrowKeyCap(direction: .down)
+                HStack(spacing: 3) {
+                    ArrowKeyCap(direction: .up)
+                    HintActionText(",")
+                    ArrowKeyCap(direction: .down)
+                }
+
+                HintActionText("for navigation,")
             }
 
-            Text("for navigation")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white.opacity(0.42))
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: 8) {
+                HintActionText("Edit")
+
+                HStack(spacing: 4) {
+                    ControlKeyCap()
+
+                    HintActionText("+")
+
+                    LetterKeyCap("L")
+                }
+            }
 
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 9)
         .frame(height: Layout.navigationHintRowHeight)
+    }
+}
+
+struct HintActionText: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(.white.opacity(0.34))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
     }
 }

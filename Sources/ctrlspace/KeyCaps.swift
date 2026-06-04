@@ -24,32 +24,67 @@ struct CommandKeyCap: View {
     }
 }
 
+struct ControlKeyCap: View {
+    var body: some View {
+        MacBookModifierKeyCap(
+            symbol: "⌃",
+            title: "control",
+            width: 58,
+            symbolTrailingPadding: 8
+        )
+    }
+}
+
+struct LetterKeyCap: View {
+    let title: String
+
+    init(_ title: String) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.48))
+            .frame(width: 52, height: 52)
+            .background {
+                KeyboardKeyBackground()
+            }
+    }
+}
+
 struct MacBookModifierKeyCap: View {
     let symbol: String
     let title: String
+    var width: CGFloat = 69
+    var symbolSize: CGFloat = 12
+    var titleSize: CGFloat = 11
+    var leadingPadding: CGFloat = 10
+    var trailingPadding: CGFloat = 3
+    var symbolTrailingPadding: CGFloat = 7
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 1) {
             Text(symbol)
-                .font(.system(size: 12, weight: .regular))
+                .font(.system(size: symbolSize, weight: .regular))
                 .foregroundStyle(.white.opacity(0.48))
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.trailing, 7)
+                .padding(.trailing, symbolTrailingPadding)
 
             Spacer(minLength: 0)
 
             Text(title)
-                .font(.system(size: 11, weight: .regular))
+                .font(.system(size: titleSize, weight: .regular))
                 .foregroundStyle(.white.opacity(0.48))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
-        .padding(.leading, 10)
-        .padding(.trailing, 3)
+        .padding(.leading, leadingPadding)
+        .padding(.trailing, trailingPadding)
         .padding(.top, 7)
         .padding(.bottom, 8)
-        .frame(width: 69, height: 52)
+        .frame(width: width, height: 52)
         .background {
             KeyboardKeyBackground()
         }
