@@ -14,8 +14,8 @@ struct NotesListView: View {
                     if notes.isEmpty {
                         emptyState
                     } else {
-                        ForEach(notes) { note in
-                            noteRow(note)
+                        ForEach(Array(notes.enumerated()), id: \.element.id) { index, note in
+                            noteRow(note, number: index + 1)
                                 .id(note.id)
                         }
                     }
@@ -45,12 +45,9 @@ struct NotesListView: View {
             .padding(.top, 18)
     }
 
-    private func noteRow(_ note: Note) -> some View {
+    private func noteRow(_ note: Note, number: Int) -> some View {
         HStack(spacing: Layout.controlSpacing) {
-            Image(systemName: "note.text")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(note.id == selectedNoteID ? 0.7 : 0.32))
-                .frame(width: Layout.leadingControlWidth, height: Layout.leadingControlWidth)
+            NumberKeyCap(number: number, isSelected: note.id == selectedNoteID)
 
             noteText(note)
 
@@ -128,5 +125,27 @@ struct NotesListView: View {
         }
         .frame(width: 382, alignment: .trailing)
         .opacity(note.id == selectedNoteID ? 1 : 0)
+    }
+}
+
+struct NavigationHintRow: View {
+    var body: some View {
+        HStack(spacing: Layout.controlSpacing) {
+            HStack(spacing: 8) {
+                ArrowKeyCap(direction: .up)
+                ArrowKeyCap(direction: .down)
+            }
+
+            Text("for navigation")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white.opacity(0.42))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
+        .frame(height: Layout.navigationHintRowHeight)
     }
 }

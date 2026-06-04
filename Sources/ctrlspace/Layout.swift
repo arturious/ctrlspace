@@ -7,6 +7,7 @@ enum Layout {
     static let panelTopOffset: CGFloat = 190
 
     static let resultRowHeight: CGFloat = 70
+    static let navigationHintRowHeight: CGFloat = 70
     static let resultsVerticalPadding: CGFloat = 16
     static let maximumVisibleResults = 6
 

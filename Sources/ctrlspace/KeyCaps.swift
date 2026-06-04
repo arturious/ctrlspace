@@ -70,6 +70,68 @@ struct FunctionKeyCap: View {
     }
 }
 
+struct NumberKeyCap: View {
+    let number: Int
+    let isSelected: Bool
+
+    var body: some View {
+        Text("\(number)")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white.opacity(isSelected ? 0.68 : 0.42))
+            .frame(width: 52, height: 52)
+            .background {
+                KeyboardKeyBackground()
+                    .opacity(isSelected ? 1 : 0.74)
+            }
+    }
+}
+
+enum ArrowKeyDirection {
+    case up
+    case down
+}
+
+struct ArrowKeyCap: View {
+    let direction: ArrowKeyDirection
+
+    var body: some View {
+        ArrowGlyph(direction: direction)
+            .fill(Color(red: 0.957, green: 0.961, blue: 0.984).opacity(0.5))
+            .frame(width: 52, height: 52)
+            .background {
+                KeyboardKeyBackground()
+            }
+    }
+}
+
+struct ArrowGlyph: Shape {
+    let direction: ArrowKeyDirection
+
+    func path(in rect: CGRect) -> Path {
+        let glyphWidth: CGFloat = 7
+        let glyphHeight: CGFloat = 8
+        let minX = rect.midX - glyphWidth / 2
+        let minY = rect.midY - glyphHeight / 2
+        let maxX = minX + glyphWidth
+        let maxY = minY + glyphHeight
+        let midX = rect.midX
+
+        var path = Path()
+        switch direction {
+        case .up:
+            path.move(to: CGPoint(x: maxX, y: maxY))
+            path.addLine(to: CGPoint(x: minX, y: maxY))
+            path.addLine(to: CGPoint(x: midX, y: minY))
+        case .down:
+            path.move(to: CGPoint(x: minX, y: minY))
+            path.addLine(to: CGPoint(x: maxX, y: minY))
+            path.addLine(to: CGPoint(x: midX, y: maxY))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
 struct MacBookKeyCap: View {
     let title: String
 

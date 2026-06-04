@@ -67,6 +67,12 @@ struct SearchView: View {
                     openNote: openSelectedNote,
                     deleteNote: deleteSelectedNote
                 )
+
+                Divider()
+                    .overlay(Color.white.opacity(0.08))
+                    .padding(.horizontal, Layout.panelHorizontalPadding)
+
+                NavigationHintRow()
             }
         }
         .frame(width: Layout.panelWidth, height: currentPanelHeight, alignment: .top)
@@ -179,6 +185,8 @@ struct SearchView: View {
             + Layout.resultsVerticalPadding
             + CGFloat(visibleRowCount) * Layout.resultRowHeight
             + rowSpacing
+            + 1
+            + Layout.navigationHintRowHeight
     }
 
     private func installDeleteKeyMonitor() {
