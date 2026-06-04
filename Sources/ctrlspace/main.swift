@@ -5,7 +5,8 @@ import SwiftUI
 private let panelWidth: CGFloat = 800
 private let panelHeight: CGFloat = 64
 private let panelCornerRadius: CGFloat = 18
-private let resultRowHeight: CGFloat = 58
+private let panelTopOffset: CGFloat = 190
+private let resultRowHeight: CGFloat = 70
 private let resultsVerticalPadding: CGFloat = 16
 private let maximumVisibleResults = 6
 private let panelHorizontalPadding: CGFloat = 16
@@ -49,7 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         hostingView.layer?.cornerCurve = .continuous
         hostingView.layer?.masksToBounds = true
         panel.contentView = hostingView
-        panel.center()
+        positionSearchPanel(panel, height: panelHeight)
         self.panel = panel
 
         configureMainMenu()
@@ -245,7 +246,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         if panel.isVisible {
             panel.orderOut(nil)
         } else {
-            panel.center()
+            positionSearchPanel(panel, height: panel.frame.height)
             panel.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
@@ -262,6 +263,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         frame.size.height = newHeight
         frame.origin.y = top - newHeight
         panel.setFrame(frame, display: true, animate: false)
+    }
+
+    @MainActor
+    private func positionSearchPanel(_ panel: NSPanel, height: CGFloat) {
+        guard let screen = NSScreen.main else {
+            panel.center()
+            return
+        }
+
+        let visibleFrame = screen.visibleFrame
+        let origin = NSPoint(
+            x: visibleFrame.midX - panelWidth / 2,
+            y: visibleFrame.maxY - panelTopOffset - height
+        )
+        panel.setFrame(
+            NSRect(origin: origin, size: NSSize(width: panelWidth, height: height)),
+            display: true,
+            animate: false
+        )
     }
 
     @MainActor
