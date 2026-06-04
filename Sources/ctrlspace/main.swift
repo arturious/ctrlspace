@@ -450,6 +450,90 @@ struct SearchView: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
+        panelContent
+        .contentShape(Rectangle())
+        .onAppear {
+            isFocused = true
+            deleteKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                guard
+                    event.keyCode == UInt16(kVK_Delete),
+                    event.modifierFlags.contains(.command),
+                    isExpanded,
+                    selectedNoteID != nil
+                else {
+                    return event
+                }
+
+                if let selectedNoteID {
+                    deleteSelectedNote(selectedNoteID)
+                }
+                return nil
+            }
+        }
+        .onDisappear {
+            if let deleteKeyMonitor {
+                NSEvent.removeMonitor(deleteKeyMonitor)
+                self.deleteKeyMonitor = nil
+            }
+        }
+        .onChange(of: query) {
+            guard !isCreating else {
+                return
+            }
+
+            let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !cleanQuery.isEmpty else {
+                collapseResults()
+                return
+            }
+
+            if !isExpanded {
+                expandResults()
+                return
+            }
+
+            selectedNoteID = visibleNotes.first?.id
+            setPanelHeight(currentPanelHeight)
+        }
+        .onKeyPress(.tab) {
+            resetSearchPanel()
+            isCreating.toggle()
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            guard !isCreating else {
+                return .ignored
+            }
+            moveSelectionDown()
+            return .handled
+        }
+        .onKeyPress(.upArrow) {
+            guard isExpanded else {
+                return .ignored
+            }
+            moveSelectionUp()
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            if isCreating {
+                withAnimation(.easeOut(duration: 0.16)) {
+                    isCreating = false
+                    query = ""
+                }
+                return .handled
+            }
+
+            if isExpanded {
+                collapseResults()
+                return .handled
+            }
+
+            NSApp.keyWindow?.orderOut(nil)
+            return .handled
+        }
+    }
+
+    private var panelContent: some View {
         VStack(spacing: 0) {
             HStack(spacing: controlSpacing) {
                 FunctionKeyCap(
@@ -539,90 +623,6 @@ struct SearchView: View {
                     RoundedRectangle(cornerRadius: panelCornerRadius, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.75)
                 }
-                .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
-        }
-        .contentShape(Rectangle())
-        .onAppear {
-            isFocused = true
-            deleteKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                guard
-                    event.keyCode == UInt16(kVK_Delete),
-                    event.modifierFlags.contains(.command),
-                    isExpanded,
-                    selectedNoteID != nil
-                else {
-                    return event
-                }
-
-                if let selectedNoteID {
-                    deleteSelectedNote(selectedNoteID)
-                }
-                return nil
-            }
-        }
-        .onDisappear {
-            if let deleteKeyMonitor {
-                NSEvent.removeMonitor(deleteKeyMonitor)
-                self.deleteKeyMonitor = nil
-            }
-        }
-        .onChange(of: query) {
-            guard !isCreating else {
-                return
-            }
-
-            let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !cleanQuery.isEmpty else {
-                collapseResults()
-                return
-            }
-
-            if !isExpanded {
-                expandResults()
-                return
-            }
-
-            selectedNoteID = visibleNotes.first?.id
-            setPanelHeight(currentPanelHeight)
-        }
-        .onKeyPress(.tab) {
-            collapseResults()
-            withAnimation(.easeOut(duration: 0.16)) {
-                isCreating.toggle()
-                query = ""
-            }
-            return .handled
-        }
-        .onKeyPress(.downArrow) {
-            guard !isCreating else {
-                return .ignored
-            }
-            moveSelectionDown()
-            return .handled
-        }
-        .onKeyPress(.upArrow) {
-            guard isExpanded else {
-                return .ignored
-            }
-            moveSelectionUp()
-            return .handled
-        }
-        .onKeyPress(.escape) {
-            if isCreating {
-                withAnimation(.easeOut(duration: 0.16)) {
-                    isCreating = false
-                    query = ""
-                }
-                return .handled
-            }
-
-            if isExpanded {
-                collapseResults()
-                return .handled
-            }
-
-            NSApp.keyWindow?.orderOut(nil)
-            return .handled
         }
     }
 
@@ -672,6 +672,13 @@ struct SearchView: View {
     private func collapseResults() {
         selectedNoteID = nil
         isExpanded = false
+        setPanelHeight(panelHeight)
+    }
+
+    private func resetSearchPanel() {
+        selectedNoteID = nil
+        isExpanded = false
+        query = ""
         setPanelHeight(panelHeight)
     }
 
