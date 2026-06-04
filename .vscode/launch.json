@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ctrlspace}",
+            "name": "Debug ctrlspace",
+            "target": "ctrlspace",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug ctrlspace"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ctrlspace}",
+            "name": "Release ctrlspace",
+            "target": "ctrlspace",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release ctrlspace"
+        }
+    ]
+}
