@@ -145,17 +145,21 @@ struct NotesListView: View {
 }
 
 struct SettingsItem: Identifiable, Equatable {
-    let id = UUID()
     let title: String
     let kind: SettingsItemKind
+
+    var id: SettingsItemKind { kind }
 }
 
-enum SettingsItemKind: Equatable {
+enum SettingsItemKind: Hashable {
+    case toggleMenuBarIcon
     case quit
 }
 
 struct SettingsListView: View {
     let items: [SettingsItem]
+    let selectedItemID: SettingsItemKind?
+    let selectItem: (SettingsItemKind) -> Void
     let submitItem: (SettingsItem) -> Void
 
     var body: some View {
@@ -208,22 +212,34 @@ struct SettingsListView: View {
 
                 ReturnKeyCap()
             }
+            .opacity(item.id == selectedItemID ? 1 : 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 8)
         .padding(.vertical, 9)
         .background {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.white.opacity(0.09))
+                .fill(
+                    item.id == selectedItemID
+                        ? Color.white.opacity(0.09)
+                        : Color.clear
+                )
         }
         .contentShape(Rectangle())
         .onTapGesture {
             submitItem(item)
         }
+        .onHover { isHovering in
+            if isHovering {
+                selectItem(item.id)
+            }
+        }
     }
 
     private func settingsTitleColor(for item: SettingsItem) -> Color {
         switch item.kind {
+        case .toggleMenuBarIcon:
+            return .white.opacity(0.7)
         case .quit:
             return Color.red.opacity(0.5)
         }

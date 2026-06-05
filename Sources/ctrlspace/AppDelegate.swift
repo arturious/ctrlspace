@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     private var hotKey: EventHotKeyRef?
     private var hotKeyHandler: EventHandlerRef?
     private var statusItem: NSStatusItem?
+    private var settingsObserver: NSObjectProtocol?
     private var hotKeyRegistrationStatus: OSStatus = noErr
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -49,7 +50,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
 
         configureMainMenu()
         registerHotKey()
-        configureStatusItem()
+        if !UserDefaults.standard.bool(forKey: AppSettings.menuBarIconHiddenKey) {
+            configureStatusItem()
+        }
+        observeSettingsChanges()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -58,6 +62,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         }
         if let hotKeyHandler {
             RemoveEventHandler(hotKeyHandler)
+        }
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
         }
     }
 
@@ -136,11 +143,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     }
 
     private func configureStatusItem() {
+        guard statusItem == nil else {
+            return
+        }
+
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.image = makeStatusBarIcon(text: "⌃", muted: true)
         statusItem.button?.target = self
         statusItem.button?.action = #selector(togglePanelFromMenu)
         self.statusItem = statusItem
+    }
+
+    private func hideStatusItem() {
+        guard let statusItem else {
+            return
+        }
+        NSStatusBar.system.removeStatusItem(statusItem)
+        self.statusItem = nil
+    }
+
+    private func observeSettingsChanges() {
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: AppSettings.menuBarIconVisibilityDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                let isHidden = UserDefaults.standard.bool(
+                    forKey: AppSettings.menuBarIconHiddenKey
+                )
+                if isHidden {
+                    self?.hideStatusItem()
+                } else {
+                    self?.configureStatusItem()
+                }
+            }
+        }
     }
 
     private func makeStatusBarIcon(text: String, muted: Bool = false) -> NSImage {

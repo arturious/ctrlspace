@@ -12,8 +12,10 @@ struct SearchView: View {
     @State private var isExpanded = false
     @State private var isShowingSettings = false
     @State private var selectedNoteID: UUID?
+    @State private var selectedSettingsItemID: SettingsItemKind?
     @State private var editingTitleNoteID: UUID?
     @State private var deleteKeyMonitor: Any?
+    @AppStorage(AppSettings.menuBarIconHiddenKey) private var isMenuBarIconHidden = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -63,11 +65,12 @@ struct SearchView: View {
                     .padding(.horizontal, Layout.panelHorizontalPadding)
 
                 if isShowingSettings {
-                    SettingsListView(items: visibleSettingsItems) { item in
-                        switch item.kind {
-                        case .quit:
-                            NSApp.terminate(nil)
-                        }
+                    SettingsListView(
+                        items: visibleSettingsItems,
+                        selectedItemID: selectedSettingsItemID,
+                        selectItem: { selectedSettingsItemID = $0 }
+                    ) { item in
+                        submitSettingsItem(item)
                     }
                 } else {
                     NotesListView(
@@ -226,9 +229,15 @@ struct SearchView: View {
         }
     }
 
-    private let settingsItems = [
-        SettingsItem(title: "Quit ctrlspace", kind: .quit)
-    ]
+    private var settingsItems: [SettingsItem] {
+        [
+            SettingsItem(
+                title: isMenuBarIconHidden ? "Show menubar icon" : "Hide menubar icon",
+                kind: .toggleMenuBarIcon
+            ),
+            SettingsItem(title: "Quit ctrlspace", kind: .quit)
+        ]
+    }
 
     private var visibleSettingsItems: [SettingsItem] {
         let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -320,6 +329,7 @@ struct SearchView: View {
 
     private func updateResultsForQuery() {
         if isShowingSettings {
+            selectedSettingsItemID = visibleSettingsItems.first?.id
             setPanelHeight(currentPanelHeight)
             return
         }
@@ -373,13 +383,10 @@ struct SearchView: View {
 
     private func submit() {
         if isShowingSettings {
-            guard let firstItem = visibleSettingsItems.first else {
+            guard let settingsItem = selectedSettingsItem ?? visibleSettingsItems.first else {
                 return
             }
-            switch firstItem.kind {
-            case .quit:
-                NSApp.terminate(nil)
-            }
+            submitSettingsItem(settingsItem)
         } else if let editingTitleNoteID {
             noteStore.updateTitle(query, for: editingTitleNoteID)
             self.editingTitleNoteID = nil
@@ -407,6 +414,7 @@ struct SearchView: View {
 
     private func collapseResults() {
         selectedNoteID = nil
+        selectedSettingsItemID = nil
         isShowingSettings = false
         isExpanded = false
         setPanelHeight(Layout.panelHeight)
@@ -414,6 +422,7 @@ struct SearchView: View {
 
     private func resetSearchPanel() {
         selectedNoteID = nil
+        selectedSettingsItemID = nil
         editingTitleNoteID = nil
         isShowingSettings = false
         isExpanded = false
@@ -422,7 +431,8 @@ struct SearchView: View {
     }
 
     private func moveSelectionDown() {
-        guard !isShowingSettings else {
+        if isShowingSettings {
+            moveSettingsSelectionDown()
             return
         }
 
@@ -447,7 +457,8 @@ struct SearchView: View {
     }
 
     private func moveSelectionUp() {
-        guard !isShowingSettings else {
+        if isShowingSettings {
+            moveSettingsSelectionUp()
             return
         }
 
@@ -486,6 +497,7 @@ struct SearchView: View {
 
     private func showSettings() {
         selectedNoteID = nil
+        selectedSettingsItemID = visibleSettingsItems.first?.id
         editingTitleNoteID = nil
         isCreating = false
         isShowingSettings = true
@@ -493,6 +505,63 @@ struct SearchView: View {
         query = ""
         isFocused = true
         setPanelHeight(currentPanelHeight)
+    }
+
+    private var selectedSettingsItem: SettingsItem? {
+        guard let selectedSettingsItemID else {
+            return nil
+        }
+        return visibleSettingsItems.first { $0.id == selectedSettingsItemID }
+    }
+
+    private func submitSettingsItem(_ item: SettingsItem) {
+        switch item.kind {
+        case .toggleMenuBarIcon:
+            isMenuBarIconHidden.toggle()
+            query = ""
+            NotificationCenter.default.post(
+                name: AppSettings.menuBarIconVisibilityDidChange,
+                object: nil
+            )
+        case .quit:
+            NSApp.terminate(nil)
+        }
+    }
+
+    private func moveSettingsSelectionDown() {
+        guard !visibleSettingsItems.isEmpty else {
+            selectedSettingsItemID = nil
+            return
+        }
+
+        guard
+            let selectedSettingsItemID,
+            let currentIndex = visibleSettingsItems.firstIndex(where: { $0.id == selectedSettingsItemID })
+        else {
+            self.selectedSettingsItemID = visibleSettingsItems.first?.id
+            return
+        }
+
+        let nextIndex = min(currentIndex + 1, visibleSettingsItems.count - 1)
+        self.selectedSettingsItemID = visibleSettingsItems[nextIndex].id
+    }
+
+    private func moveSettingsSelectionUp() {
+        guard !visibleSettingsItems.isEmpty else {
+            selectedSettingsItemID = nil
+            return
+        }
+
+        guard
+            let selectedSettingsItemID,
+            let currentIndex = visibleSettingsItems.firstIndex(where: { $0.id == selectedSettingsItemID })
+        else {
+            self.selectedSettingsItemID = visibleSettingsItems.first?.id
+            return
+        }
+
+        let previousIndex = max(currentIndex - 1, 0)
+        self.selectedSettingsItemID = visibleSettingsItems[previousIndex].id
     }
 
     private func startEditingSelectedTitle() {
