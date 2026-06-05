@@ -97,38 +97,33 @@ struct NotesListView: View {
 
     private func rowActions(for note: Note) -> some View {
         HStack(spacing: 7) {
-            Button {
-                deleteNote(note.id)
-            } label: {
+            HStack(spacing: 7) {
+                Text("Delete")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Color.red.opacity(0.5))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
                 HStack(spacing: 7) {
-                    Text("Delete")
+                    CommandKeyCap()
+
+                    Text("+")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color.red.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.36))
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
 
-                    HStack(spacing: 7) {
-                        CommandKeyCap()
+                    DeleteKeyCap()
+                }
 
-                        Text("+")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.36))
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-
-                        DeleteKeyCap()
-                    }
-
-                    HStack(spacing: 4) {
-                        Text(",")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.36))
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                    }
+                HStack(spacing: 4) {
+                    Text(",")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.36))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
             }
-            .buttonStyle(.plain)
 
             HStack(spacing: 7) {
                 Text("Open")
