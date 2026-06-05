@@ -4,7 +4,7 @@ enum Layout {
     static let panelWidth: CGFloat = 800
     static let panelHeight: CGFloat = 64
     static let panelCornerRadius: CGFloat = 18
-    static let panelTopOffset: CGFloat = 190
+    static let panelTopOffset: CGFloat = 80
 
     static let resultRowHeight: CGFloat = 70
     static let navigationHintRowHeight: CGFloat = 70
