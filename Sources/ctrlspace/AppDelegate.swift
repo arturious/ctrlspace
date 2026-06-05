@@ -151,22 +151,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
             .foregroundColor: NSColor.black.withAlphaComponent(muted ? 0.58 : 1.0)
         ]
         let textSize = text.size(withAttributes: attributes)
-        let keyWidth: CGFloat = 22
-        let spacing: CGFloat = 4
+        let horizontalPadding: CGFloat = 4
         let size = NSSize(
-            width: ceil(textSize.width) + spacing + keyWidth,
+            width: max(horizontalPadding + ceil(textSize.width) + horizontalPadding, 22),
             height: 16
         )
 
         let image = NSImage(size: size, flipped: false) { bounds in
-            let keyBounds = NSRect(
-                x: bounds.maxX - keyWidth,
-                y: bounds.minY,
-                width: keyWidth,
-                height: bounds.height
-            )
             let border = NSBezierPath(
-                roundedRect: keyBounds.insetBy(dx: 0.5, dy: 0.5),
+                roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5),
                 xRadius: 3,
                 yRadius: 3
             )
@@ -175,7 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
             border.stroke()
 
             let textRect = NSRect(
-                x: 0,
+                x: 3,
                 y: floor((bounds.height - textSize.height) / 2) - 1,
                 width: textSize.width,
                 height: textSize.height
