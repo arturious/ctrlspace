@@ -34,15 +34,19 @@ struct NotesListView: View {
     }
 
     private var emptyState: some View {
-        Text("No notes yet")
-            .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.white.opacity(0.3))
+        HStack(spacing: Layout.controlSpacing) {
+            LetterKeyCap("?")
+
+            Text("No notes yet")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.3))
+                .lineLimit(1)
+
+            Spacer(minLength: Layout.controlSpacing)
+        }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(
-                .leading,
-                Layout.panelHorizontalPadding + Layout.leadingControlWidth + Layout.controlSpacing
-            )
-            .padding(.top, 18)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 9)
     }
 
     private func noteRow(_ note: Note, number: Int) -> some View {
@@ -140,32 +144,141 @@ struct NotesListView: View {
     }
 }
 
+struct SettingsItem: Identifiable, Equatable {
+    let id = UUID()
+    let title: String
+    let kind: SettingsItemKind
+}
+
+enum SettingsItemKind: Equatable {
+    case quit
+}
+
+struct SettingsListView: View {
+    let items: [SettingsItem]
+    let submitItem: (SettingsItem) -> Void
+
+    var body: some View {
+        VStack(spacing: 4) {
+            if items.isEmpty {
+                emptySettingsRow
+            } else {
+                ForEach(Array(items.enumerated()), id: \.element.id) { _, item in
+                    settingsRow(item)
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+    }
+
+    private var emptySettingsRow: some View {
+        HStack(spacing: Layout.controlSpacing) {
+            LetterKeyCap("?")
+
+            Text("No settings found")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.3))
+                .lineLimit(1)
+
+            Spacer(minLength: Layout.controlSpacing)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 9)
+    }
+
+    private func settingsRow(_ item: SettingsItem) -> some View {
+        HStack(spacing: Layout.controlSpacing) {
+            HashKeyCap()
+
+            Text(item.title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(settingsTitleColor(for: item))
+                .lineLimit(1)
+
+            Spacer(minLength: Layout.controlSpacing)
+
+            HStack(spacing: 7) {
+                Text("Submit")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.36))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                ReturnKeyCap()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 9)
+        .background {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.white.opacity(0.09))
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            submitItem(item)
+        }
+    }
+
+    private func settingsTitleColor(for item: SettingsItem) -> Color {
+        switch item.kind {
+        case .quit:
+            return Color.red.opacity(0.5)
+        }
+    }
+}
+
 struct NavigationHintRow: View {
+    let isShowingSettings: Bool
+    let hasResults: Bool
+
     var body: some View {
         HStack(spacing: 14) {
-            HStack(spacing: 8) {
-                HStack(spacing: 3) {
-                    ArrowKeyCap(direction: .up)
-                    HintActionText(",")
-                    ArrowKeyCap(direction: .down)
+            if hasResults {
+                HStack(spacing: 8) {
+                    HStack(spacing: 3) {
+                        ArrowKeyCap(direction: .up)
+                        HintActionText(",")
+                        ArrowKeyCap(direction: .down)
+                    }
+
+                    HintActionText("for navigation,")
                 }
 
-                HintActionText("for navigation,")
+                if !isShowingSettings {
+                    HStack(spacing: 8) {
+                        HintActionText("Edit")
+
+                        HStack(spacing: 4) {
+                            ControlKeyCap()
+
+                            HintActionText("+")
+
+                            LetterKeyCap("L")
+                        }
+                    }
+                }
+
+                Spacer()
+            } else {
+                Spacer()
             }
 
-            HStack(spacing: 8) {
-                HintActionText("Edit")
+            if !isShowingSettings {
+                HStack(spacing: 8) {
+                    HintActionText("Settings")
 
-                HStack(spacing: 4) {
-                    ControlKeyCap()
+                    HStack(spacing: 4) {
+                        ControlKeyCap()
 
-                    HintActionText("+")
+                        HintActionText("+")
 
-                    LetterKeyCap("L")
+                        SlashKeyCap()
+                    }
                 }
             }
-
-            Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 9)

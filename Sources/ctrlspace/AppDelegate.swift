@@ -138,39 +138,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     private func configureStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.image = makeStatusBarIcon(text: "⌃", muted: true)
-
-        let menu = NSMenu()
-
-        let toggleItem = NSMenuItem(
-            title: "Open ctrlspace",
-            action: #selector(togglePanelFromMenu),
-            keyEquivalent: " "
-        )
-        toggleItem.keyEquivalentModifierMask = [.control]
-        toggleItem.target = self
-        menu.addItem(toggleItem)
-
-        if hotKeyRegistrationStatus != noErr {
-            let conflictItem = NSMenuItem(
-                title: "Control-Space is used by macOS",
-                action: nil,
-                keyEquivalent: ""
-            )
-            conflictItem.isEnabled = false
-            menu.addItem(conflictItem)
-        }
-
-        menu.addItem(.separator())
-
-        let quitItem = NSMenuItem(
-            title: "Quit ctrlspace",
-            action: #selector(quitApplication),
-            keyEquivalent: "q"
-        )
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        statusItem.menu = menu
+        statusItem.button?.target = self
+        statusItem.button?.action = #selector(togglePanelFromMenu)
         self.statusItem = statusItem
     }
 

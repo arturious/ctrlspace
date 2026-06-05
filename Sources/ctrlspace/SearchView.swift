@@ -10,6 +10,7 @@ struct SearchView: View {
     @State private var query = ""
     @State private var isCreating = false
     @State private var isExpanded = false
+    @State private var isShowingSettings = false
     @State private var selectedNoteID: UUID?
     @State private var editingTitleNoteID: UUID?
     @State private var deleteKeyMonitor: Any?
@@ -61,19 +62,31 @@ struct SearchView: View {
                     .overlay(Color.white.opacity(0.08))
                     .padding(.horizontal, Layout.panelHorizontalPadding)
 
-                NotesListView(
-                    notes: visibleNotes,
-                    selectedNoteID: selectedNoteID,
-                    selectNote: { selectedNoteID = $0 },
-                    openNote: openSelectedNote,
-                    deleteNote: deleteSelectedNote
-                )
+                if isShowingSettings {
+                    SettingsListView(items: visibleSettingsItems) { item in
+                        switch item.kind {
+                        case .quit:
+                            NSApp.terminate(nil)
+                        }
+                    }
+                } else {
+                    NotesListView(
+                        notes: visibleNotes,
+                        selectedNoteID: selectedNoteID,
+                        selectNote: { selectedNoteID = $0 },
+                        openNote: openSelectedNote,
+                        deleteNote: deleteSelectedNote
+                    )
+                }
 
                 Divider()
                     .overlay(Color.white.opacity(0.08))
                     .padding(.horizontal, Layout.panelHorizontalPadding)
 
-                NavigationHintRow()
+                NavigationHintRow(
+                    isShowingSettings: isShowingSettings,
+                    hasResults: hasVisibleResults
+                )
             }
         }
         .frame(width: Layout.panelWidth, height: currentPanelHeight, alignment: .top)
@@ -84,9 +97,7 @@ struct SearchView: View {
 
     private var searchBar: some View {
         HStack(spacing: Layout.controlSpacing) {
-            FunctionKeyCap(
-                systemName: isCreating ? "square.and.pencil" : "magnifyingglass"
-            )
+            leadingKeyCap
 
             TextField(
                 "",
@@ -109,8 +120,26 @@ struct SearchView: View {
     }
 
     @ViewBuilder
+    private var leadingKeyCap: some View {
+        if isShowingSettings {
+            HashKeyCap()
+        } else {
+            FunctionKeyCap(
+                systemName: isCreating ? "square.and.pencil" : "magnifyingglass"
+            )
+        }
+    }
+
+    @ViewBuilder
     private var trailingActions: some View {
-        if editingTitleNoteID != nil {
+        if isShowingSettings {
+            HStack(spacing: 8) {
+                SearchActionText("Cancel")
+
+                EscapeKeyCap()
+            }
+            .transition(.opacity)
+        } else if editingTitleNoteID != nil {
             HStack(spacing: 7) {
                 HStack(spacing: 8) {
                     SearchActionText("Save")
@@ -197,9 +226,30 @@ struct SearchView: View {
         }
     }
 
+    private let settingsItems = [
+        SettingsItem(title: "Quit ctrlspace", kind: .quit)
+    ]
+
+    private var visibleSettingsItems: [SettingsItem] {
+        let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanQuery.isEmpty else {
+            return settingsItems
+        }
+        return settingsItems.filter {
+            $0.title.localizedCaseInsensitiveContains(cleanQuery)
+        }
+    }
+
+    private var hasVisibleResults: Bool {
+        isShowingSettings ? !visibleSettingsItems.isEmpty : !visibleNotes.isEmpty
+    }
+
     private var searchPrompt: String {
         if editingTitleNoteID != nil {
             return "Edit note title"
+        }
+        if isShowingSettings {
+            return "Settings"
         }
         return isCreating ? "Create a note" : "Search for notes"
     }
@@ -209,7 +259,9 @@ struct SearchView: View {
             return Layout.panelHeight
         }
 
-        let visibleRowCount = max(1, min(visibleNotes.count, Layout.maximumVisibleResults))
+        let visibleRowCount = isShowingSettings
+            ? max(1, min(visibleSettingsItems.count, Layout.maximumVisibleResults))
+            : max(1, min(visibleNotes.count, Layout.maximumVisibleResults))
         let rowSpacing = CGFloat(max(0, visibleRowCount - 1)) * 4
         return Layout.panelHeight
             + 1
@@ -223,9 +275,20 @@ struct SearchView: View {
     private func installDeleteKeyMonitor() {
         deleteKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if
+                event.keyCode == UInt16(kVK_ANSI_Slash),
+                event.modifierFlags.contains(.control),
+                editingTitleNoteID == nil,
+                !isCreating
+            {
+                showSettings()
+                return nil
+            }
+
+            if
                 event.keyCode == UInt16(kVK_ANSI_L),
                 event.modifierFlags.contains(.control),
-                !isCreating
+                !isCreating,
+                !isShowingSettings
             {
                 startEditingSelectedTitle()
                 return nil
@@ -235,6 +298,7 @@ struct SearchView: View {
                 event.keyCode == UInt16(kVK_Delete),
                 event.modifierFlags.contains(.command),
                 isExpanded,
+                !isShowingSettings,
                 selectedNoteID != nil
             else {
                 return event
@@ -255,7 +319,12 @@ struct SearchView: View {
     }
 
     private func updateResultsForQuery() {
-        guard !isCreating, editingTitleNoteID == nil else {
+        if isShowingSettings {
+            setPanelHeight(currentPanelHeight)
+            return
+        }
+
+        guard !isCreating, editingTitleNoteID == nil, !isShowingSettings else {
             return
         }
 
@@ -280,6 +349,11 @@ struct SearchView: View {
             return .handled
         }
 
+        if isShowingSettings {
+            collapseResults()
+            return .handled
+        }
+
         if isCreating {
             withAnimation(.easeOut(duration: 0.16)) {
                 isCreating = false
@@ -298,7 +372,15 @@ struct SearchView: View {
     }
 
     private func submit() {
-        if let editingTitleNoteID {
+        if isShowingSettings {
+            guard let firstItem = visibleSettingsItems.first else {
+                return
+            }
+            switch firstItem.kind {
+            case .quit:
+                NSApp.terminate(nil)
+            }
+        } else if let editingTitleNoteID {
             noteStore.updateTitle(query, for: editingTitleNoteID)
             self.editingTitleNoteID = nil
             selectedNoteID = editingTitleNoteID
@@ -317,6 +399,7 @@ struct SearchView: View {
     }
 
     private func expandResults() {
+        isShowingSettings = false
         selectedNoteID = visibleNotes.first?.id
         isExpanded = true
         setPanelHeight(currentPanelHeight)
@@ -324,6 +407,7 @@ struct SearchView: View {
 
     private func collapseResults() {
         selectedNoteID = nil
+        isShowingSettings = false
         isExpanded = false
         setPanelHeight(Layout.panelHeight)
     }
@@ -331,12 +415,17 @@ struct SearchView: View {
     private func resetSearchPanel() {
         selectedNoteID = nil
         editingTitleNoteID = nil
+        isShowingSettings = false
         isExpanded = false
         query = ""
         setPanelHeight(Layout.panelHeight)
     }
 
     private func moveSelectionDown() {
+        guard !isShowingSettings else {
+            return
+        }
+
         guard isExpanded else {
             expandResults()
             return
@@ -358,6 +447,10 @@ struct SearchView: View {
     }
 
     private func moveSelectionUp() {
+        guard !isShowingSettings else {
+            return
+        }
+
         guard !visibleNotes.isEmpty else {
             return
         }
@@ -388,6 +481,17 @@ struct SearchView: View {
             query = ""
         }
         selectedNoteID = visibleNotes.first?.id
+        setPanelHeight(currentPanelHeight)
+    }
+
+    private func showSettings() {
+        selectedNoteID = nil
+        editingTitleNoteID = nil
+        isCreating = false
+        isShowingSettings = true
+        isExpanded = true
+        query = ""
+        isFocused = true
         setPanelHeight(currentPanelHeight)
     }
 
