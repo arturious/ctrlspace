@@ -107,9 +107,9 @@ struct NotesListView: View {
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
 
-                    CommandKeyCap()
+                    HStack(spacing: 7) {
+                        CommandKeyCap()
 
-                    HStack(spacing: 4) {
                         Text("+")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.white.opacity(0.36))
@@ -117,7 +117,9 @@ struct NotesListView: View {
                             .fixedSize(horizontal: true, vertical: false)
 
                         DeleteKeyCap()
+                    }
 
+                    HStack(spacing: 4) {
                         Text(",")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.white.opacity(0.36))

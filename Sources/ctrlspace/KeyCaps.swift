@@ -18,6 +18,12 @@ struct DeleteKeyCap: View {
     }
 }
 
+struct EscapeKeyCap: View {
+    var body: some View {
+        MacBookKeyCap(title: "escape")
+    }
+}
+
 struct CommandKeyCap: View {
     var body: some View {
         MacBookModifierKeyCap(symbol: "⌘", title: "command")

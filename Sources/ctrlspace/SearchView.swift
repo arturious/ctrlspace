@@ -111,14 +111,22 @@ struct SearchView: View {
     @ViewBuilder
     private var trailingActions: some View {
         if editingTitleNoteID != nil {
-            HStack(spacing: 8) {
-                Text("Save")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.34))
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: 7) {
+                HStack(spacing: 8) {
+                    SearchActionText("Save")
 
-                ReturnKeyCap()
+                    HStack(spacing: 4) {
+                        ReturnKeyCap()
+
+                        SearchActionText(",")
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    SearchActionText("Cancel")
+
+                    EscapeKeyCap()
+                }
             }
             .transition(.opacity)
         } else if query.isEmpty && !isCreating {
@@ -406,5 +414,21 @@ struct SearchView: View {
         editingTitleNoteID = nil
         query = ""
         setPanelHeight(currentPanelHeight)
+    }
+}
+
+private struct SearchActionText: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(.white.opacity(0.34))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
     }
 }
