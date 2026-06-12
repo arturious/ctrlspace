@@ -12,32 +12,17 @@ final class NoteStore: ObservableObject {
     @Published private(set) var notes: [Note] = []
 
     private let storageKey = "ki.notes"
-    private let legacyStorageKeys = ["ctrlspace.notes", "NotesSpotlight.notes"]
 
     init() {
         let defaults = UserDefaults.standard
-        let currentDomainLegacyData = legacyStorageKeys.lazy.compactMap {
-            defaults.data(forKey: $0)
-        }.first
-        let oldBundleDomain = defaults.persistentDomain(
-            forName: AppSettings.legacyBundleIdentifier
-        )
-        let oldBundleLegacyData = legacyStorageKeys.lazy.compactMap {
-            oldBundleDomain?[$0] as? Data
-        }.first
 
         guard
-            let data = defaults.data(forKey: storageKey)
-                ?? currentDomainLegacyData
-                ?? oldBundleLegacyData,
+            let data = defaults.data(forKey: storageKey),
             let decoded = try? JSONDecoder().decode([Note].self, from: data)
         else {
             return
         }
         notes = decoded
-        if defaults.data(forKey: storageKey) == nil {
-            defaults.set(data, forKey: storageKey)
-        }
     }
 
     func createNote(title: String) -> UUID {

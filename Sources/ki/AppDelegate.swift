@@ -15,7 +15,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        AppSettings.migrateLegacyValues()
 
         let panel = SearchWindowPanel(
             contentRect: NSRect(
