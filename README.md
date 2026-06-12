@@ -1,4 +1,4 @@
-# ki
+# Kī
 
 A compact macOS notes search panel inspired by Spotlight.
 
