@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        AppSettings.migrateLegacyValues()
 
         let panel = SearchWindowPanel(
             contentRect: NSRect(
@@ -117,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         mainMenu.addItem(appMenuItem)
         let appMenu = NSMenu()
         appMenu.addItem(
-            withTitle: "Quit ctrlspace",
+            withTitle: "Quit ki",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
@@ -215,7 +216,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = "ctrlspace"
+        image.accessibilityDescription = "ki"
         return image
     }
 

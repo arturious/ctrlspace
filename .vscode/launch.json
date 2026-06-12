@@ -4,21 +4,21 @@
             "type": "swift",
             "request": "launch",
             "args": [],
-            "cwd": "${workspaceFolder:ctrlspace}",
-            "name": "Debug ctrlspace",
-            "target": "ctrlspace",
+            "cwd": "${workspaceFolder:ki}",
+            "name": "Debug ki",
+            "target": "ki",
             "configuration": "debug",
-            "preLaunchTask": "swift: Build Debug ctrlspace"
+            "preLaunchTask": "swift: Build Debug ki"
         },
         {
             "type": "swift",
             "request": "launch",
             "args": [],
-            "cwd": "${workspaceFolder:ctrlspace}",
-            "name": "Release ctrlspace",
-            "target": "ctrlspace",
+            "cwd": "${workspaceFolder:ki}",
+            "name": "Release ki",
+            "target": "ki",
             "configuration": "release",
-            "preLaunchTask": "swift: Build Release ctrlspace"
+            "preLaunchTask": "swift: Build Release ki"
         }
     ]
 }

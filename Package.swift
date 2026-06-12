@@ -3,17 +3,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "ctrlspace",
+    name: "ki",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "ctrlspace", targets: ["ctrlspace"])
+        .executable(name: "ki", targets: ["ki"])
     ],
     targets: [
         .executableTarget(
-            name: "ctrlspace",
-            path: "Sources/ctrlspace"
+            name: "ki",
+            path: "Sources/ki"
         )
     ]
 )

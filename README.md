@@ -1,4 +1,4 @@
-# ctrlspace
+# ki
 
 A compact macOS notes search panel inspired by Spotlight.
 
@@ -6,7 +6,7 @@ A compact macOS notes search panel inspired by Spotlight.
 
 ```sh
 ./build-app.sh
-open build/ctrlspace.app
+open build/ki.app
 ```
 
 Press `Control-Space` from any app to show or hide the panel. The menu bar icon
@@ -14,4 +14,4 @@ can also open the panel or quit the app. Press `Tab` to switch into note creatio
 mode and `Escape` to close the panel.
 
 If macOS uses `Control-Space` to switch input sources, disable that shortcut in
-System Settings before using it with ctrlspace.
+System Settings before using it with ki.

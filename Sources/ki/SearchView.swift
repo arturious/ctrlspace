@@ -235,7 +235,7 @@ struct SearchView: View {
                 title: isMenuBarIconHidden ? "Show menubar icon" : "Hide menubar icon",
                 kind: .toggleMenuBarIcon
             ),
-            SettingsItem(title: "Quit ctrlspace", kind: .quit)
+            SettingsItem(title: "Quit ki", kind: .quit)
         ]
     }
 
