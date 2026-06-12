@@ -101,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         )
 
         hotKeyRegistrationStatus = RegisterEventHotKey(
-            UInt32(kVK_Space),
+            UInt32(kVK_ANSI_K),
             UInt32(controlKey),
             hotKeyID,
             GetApplicationEventTarget(),
